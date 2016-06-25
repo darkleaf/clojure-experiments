@@ -2,6 +2,10 @@
   (:require [clojure.test :refer :all]
             [football.core :refer :all]))
 
-(deftest a-test
-  (testing "FIXME, I fail."
-    (is (= 0 1))))
+(deftest football
+  (testing "score"
+    (is (= (score "2:1" "2:1") 2))
+    (is (= (score "1:1" "2:2") 1))
+    (is (= (score "2:1" "2:0") 1))
+    (is (= (score "2:1" "1:2") 0))))
+
