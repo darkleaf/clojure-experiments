@@ -1,10 +1,13 @@
 (ns football.core
   (:require [clojure.string :as str]))
 
+(defn- parse-score [score]
+  (as-> score v
+    (str/split v #":")
+    (map bigint v)))
+
 (defn- winner [score]
-  (let [[first second] (as-> score v
-                         (str/split v #":")
-                         (map bigint v))]
+  (let [[first second] (parse-score score)]
     (cond
       (> first second) :first
       (> second first) :second
