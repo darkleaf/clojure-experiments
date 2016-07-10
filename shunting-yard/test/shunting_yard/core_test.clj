@@ -2,6 +2,14 @@
   (:require [clojure.test :refer :all]
             [shunting-yard.core :refer :all]))
 
-(deftest a-test
-  (testing "FIXME, I fail."
-    (is (= 0 1))))
+(deftest calc-test
+  (are [x y] (= x (calc y))
+    42 "40 + 2"))
+
+(deftest tokeinzer-test
+  (are [x y] (= x (->> y (tokenizer) (map :value)))
+    ["40" "+" "2"] "40 + 2"))
+
+(deftest polish-test
+  (are [x y] (= x (->> y (tokenizer) (polish) (map :value)))
+    ["40" "2" "+"] "40 + 2"))
