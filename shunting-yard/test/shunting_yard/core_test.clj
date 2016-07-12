@@ -11,5 +11,5 @@
     ["40" "+" "2"] "40 + 2"))
 
 (deftest polish-test
-  (are [x y] (= x (->> y (tokenizer) (polish) (map :value)))
+  (are [x y] (= x (->> y (tokenizer) (shunting-yard) (map :value)))
     ["40" "2" "+"] "40 + 2"))

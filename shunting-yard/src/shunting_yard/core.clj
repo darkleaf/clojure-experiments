@@ -9,7 +9,10 @@
                   {:pattern #"\*", :type :operator, :priority 2, :fn *}
                   {:pattern #"\/", :type :operator, :priority 2, :fn /}])
 
-(defn build-token [value]
+(defmulti process-token (fn [token _ _] (:type token)))
+(defmulti exec-token (fn [token _] (:type token)))
+
+(defn- build-token [value]
   (as-> value x
     (fn [{:keys [pattern]}] (re-matches pattern x))
     (filter x token-types)
@@ -25,46 +28,29 @@
       (re-seq pattern)
       (map build-token))))
 
-(defmulti handle-token (fn [token _ _] (:type token)))
-
-(defn polish
-  ([tokens] (polish tokens '() clojure.lang.PersistentQueue/EMPTY))
+(defn- dismantle-tokens
+  "Разбирает токены на стек и очередь"
+  ([tokens] (dismantle-tokens tokens '() clojure.lang.PersistentQueue/EMPTY))
   ([[token & rest] stack queue]
-   (print token)
-
    (if token
-     (do
-       (let [[new-stack new-queue] (handle-token token stack queue)]
-         (recur rest new-stack new-queue)))
-     (do
-       (loop [final-stack stack
-              final-queue queue]
-         (if (not-empty final-stack)
-           (do
-             ;;bracket
-             (recur (pop final-stack) (conj final-queue (peek final-stack))))
-           final-queue))))))
+     (let [[new-stack new-queue] (process-token token stack queue)]
+       (recur rest new-stack new-queue))
+     [stack queue])))
 
-(defmethod handle-token :number [token stack queue]
-  [stack (conj queue token)])
+(defn- gathering-tokens [[stack queue]]
+  "Собирает токены из стека и очереди"
+  (if (not-empty stack)
+   (do
+     ;;bracket
+     (recur [(pop stack) (conj queue (peek stack))]))
+   queue))
 
-(defmethod handle-token :operator [token stack queue]
-  [(conj stack token) queue])
+(defn shunting-yard [tokens]
+  (-> tokens
+      dismantle-tokens
+      gathering-tokens))
 
-
-(defmulti exec-token (fn [token _] (:type token)))
-
-(defmethod exec-token :number [token stack]
-  (conj stack (-> token :value bigint)))
-
-(defmethod exec-token :operator [token stack]
-  (let [arg1 (-> stack pop peek)
-        arg2 (-> stack peek)
-        fn (:fn token)
-        result (fn arg1 arg2)]
-    (conj stack result)))
-
-(defn exec
+(defn- exec
   ([tokens] (exec tokens '()))
   ([[token & rest] stack]
    (if token
@@ -75,5 +61,21 @@
 (defn calc [exp]
   (-> exp
       tokenizer
-      polish
+      shunting-yard
       exec))
+
+(defmethod process-token :number [token stack queue]
+  [stack (conj queue token)])
+
+(defmethod process-token :operator [token stack queue]
+  [(conj stack token) queue])
+
+(defmethod exec-token :number [token stack]
+  (conj stack (-> token :value bigint)))
+
+(defmethod exec-token :operator [token stack]
+  (let [arg1 (-> stack pop peek)
+        arg2 (-> stack peek)
+        token-fn (:fn token)
+        result (token-fn arg1 arg2)]
+    (conj stack result)))
