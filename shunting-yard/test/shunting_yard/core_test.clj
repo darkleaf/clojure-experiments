@@ -5,8 +5,10 @@
 (deftest calc-test
   (are [x y] (= x (calc y))
     42 "40 + 2"
-    8 "2 + 2 * 3"))
-
+    8 "2 + 2 * 3"
+    4 "2 * (3 - 1)"
+    3 "2 / 2 * 3"
+    6 "(2 * (2 + (4 / 2) - 1))"))
 
 (deftest tokeinzer-test
   (are [x y] (= x (->> y (tokenizer) (map :value)))

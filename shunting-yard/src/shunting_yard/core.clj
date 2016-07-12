@@ -2,8 +2,8 @@
   (:require [clojure.string :as str]))
 
 (def token-types [{:pattern #"\d+", :type :number}
-                  {:pattern #"\(", :type :open-bracket}
-                  {:pattern #"\)", :type :close-bracket}
+                  {:pattern #"\(", :type :open-paren}
+                  {:pattern #"\)", :type :close-paren}
                   {:pattern #"\+", :type :operator, :priority 1, :fn +}
                   {:pattern #"\-", :type :operator, :priority 1, :fn -}
                   {:pattern #"\*", :type :operator, :priority 2, :fn *}
@@ -40,10 +40,8 @@
 (defn- gathering-tokens [[stack queue]]
   "Собирает токены из стека и очереди"
   (if (not-empty stack)
-   (do
-     ;;bracket
-     (recur [(pop stack) (conj queue (peek stack))]))
-   queue))
+    (recur [(pop stack) (conj queue (peek stack))])
+    queue))
 
 (defn shunting-yard [tokens]
   (-> tokens
@@ -74,6 +72,14 @@
        (<= (:priority op1) (:priority op2)))
     (recur op1 rest (conj queue op2))
     [(conj stack op1) queue]))
+
+(defmethod process-token :open-paren [token stack queue]
+  [(conj stack token) queue])
+
+(defmethod process-token :close-paren [token [head & rest :as stack] queue]
+  (if (not= :open-paren (:type head))
+    (recur token (pop stack) (conj queue (peek stack)))
+    [(pop stack) queue]))
 
 (defmethod exec-token :number [token stack]
   (conj stack (-> token :value bigint)))
