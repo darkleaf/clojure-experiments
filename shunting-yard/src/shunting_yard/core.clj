@@ -67,8 +67,13 @@
 (defmethod process-token :number [token stack queue]
   [stack (conj queue token)])
 
-(defmethod process-token :operator [token stack queue]
-  [(conj stack token) queue])
+(defmethod process-token :operator [op1 [op2 & rest :as stack] queue]
+  (println op1 stack queue)
+  (if (and
+       (= :operator (:type op2))
+       (<= (:priority op1) (:priority op2)))
+    (recur op1 rest (conj queue op2))
+    [(conj stack op1) queue]))
 
 (defmethod exec-token :number [token stack]
   (conj stack (-> token :value bigint)))
@@ -76,6 +81,7 @@
 (defmethod exec-token :operator [token stack]
   (let [arg1 (-> stack pop peek)
         arg2 (-> stack peek)
+        new-stack (-> stack pop pop)
         token-fn (:fn token)
         result (token-fn arg1 arg2)]
-    (conj stack result)))
+    (conj new-stack result)))

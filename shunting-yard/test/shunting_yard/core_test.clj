@@ -4,7 +4,9 @@
 
 (deftest calc-test
   (are [x y] (= x (calc y))
-    42 "40 + 2"))
+    42 "40 + 2"
+    8 "2 + 2 * 3"))
+
 
 (deftest tokeinzer-test
   (are [x y] (= x (->> y (tokenizer) (map :value)))
