@@ -5,7 +5,8 @@
             :url "http://www.eclipse.org/legal/epl-v10.html"}
   :dependencies [[org.clojure/clojure "1.8.0"]
                  [ring/ring-core "1.5.0"]
-                 [ring/ring-jetty-adapter "1.5.0"]]
+                 [ring/ring-jetty-adapter "1.5.0"]
+                 [mount "0.1.10"]]
   :main ^:skip-aot try-ring.core
   :target-path "target/%s"
   :profiles {:uberjar {:aot :all}})
