@@ -7,6 +7,7 @@
                  [ring/ring-core "1.5.0"]
                  [ring/ring-jetty-adapter "1.5.0"]
                  [mount "0.1.10"]]
+  :repl-options {:init-ns try-ring.dev}
   :main ^:skip-aot try-ring.core
   :target-path "target/%s"
   :profiles {:uberjar {:aot :all}})
